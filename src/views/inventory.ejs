@@ -1,0 +1,223 @@
+<div class="space-y-6">
+  <div class="grid md:grid-cols-3 gap-4">
+    <div class="bg-white rounded-lg shadow p-4 border-l-4 border-slate-700">
+      <p class="text-xs uppercase text-slate-500">Total Containers In</p>
+      <p class="text-2xl font-bold"><%= summary.total_containers_in %></p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4 border-l-4 border-blue-700">
+      <p class="text-xs uppercase text-slate-500">Total DOs Out</p>
+      <p class="text-2xl font-bold"><%= summary.total_dos_out %></p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4 border-l-4 border-cyan-700">
+      <p class="text-xs uppercase text-slate-500">SKUs In Zone</p>
+      <p class="text-2xl font-bold"><%= summary.total_skus_in_zone %></p>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow p-6">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-3">
+      <h2 class="text-lg font-semibold">Remaining Balances</h2>
+      <input id="inventorySearch" type="text" placeholder="Search SKU or Admission Number" class="w-full md:w-80 border rounded px-3 py-2 text-sm" />
+    </div>
+    <div class="max-h-[28rem] overflow-auto border rounded">
+      <table id="inventoryTable" class="w-full table-auto text-sm">
+      <thead class="text-left text-slate-700 bg-slate-100 sticky top-0 z-10">
+        <tr>
+          <th class="px-2 py-1">Admission #</th>
+          <th class="px-2 py-1">SKU</th>
+          <th class="px-2 py-1">Container</th>
+          <th class="px-2 py-1">HTS Code</th>
+          <th class="px-2 py-1">Unit Value</th>
+          <th class="px-2 py-1">Qty Pieces (Original)</th>
+          <th class="px-2 py-1">Qty Remaining</th>
+          <th class="px-2 py-1">Qty Depleted</th>
+          <th class="px-2 py-1">Linked DO#</th>
+          <th class="px-2 py-1">Entry Date</th>
+          <th class="px-2 py-1">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="inventoryTableBody">
+        <% live.forEach(row => { %>
+          <% const received = Number(row.qty_pieces || 0); %>
+          <% const remaining = Number(row.qty_remaining || 0); %>
+          <% const lowThreshold = received * 0.10; %>
+          <% const statusClass = remaining === 0 ? 'bg-red-50 text-red-900' : (remaining < lowThreshold ? 'bg-amber-50 text-amber-900' : ''); %>
+          <tr class="border-t <%= statusClass %>" data-inbound-id="<%= row.id %>" data-sku="<%= row.sku || '' %>" data-hts-code="<%= row.hts_code || '' %>" data-unit-value="<%= row.unit_value || 0 %>" data-admission-no="<%= row.admission_no || '' %>">
+            <td class="px-2 py-1 admission-no"><%= row.admission_no %></td>
+            <td class="px-2 py-1 sku"><%= row.sku %></td>
+            <td class="px-2 py-1"><%= row.container_no %></td>
+            <td class="px-2 py-1 hts-code"><%= row.hts_code || '' %></td>
+            <td class="px-2 py-1 unit-value"><%= row.unit_value || 0 %></td>
+            <td class="px-2 py-1"><%= row.qty_pieces %></td>
+            <td class="px-2 py-1"><%= row.qty_remaining %></td>
+            <td class="px-2 py-1"><%= row.qty_depleted %></td>
+            <td class="px-2 py-1"><%= row.linked_do_numbers || '' %></td>
+            <td class="px-2 py-1"><%= row.entry_date ? new Date(row.entry_date).toISOString().slice(0,10) : '' %></td>
+            <td class="px-2 py-1">
+              <div class="flex gap-2">
+                <button class="inbound-edit text-xs bg-sky-600 text-white px-2 py-1 rounded" type="button">Edit</button>
+                <button class="inbound-delete text-xs bg-red-600 text-white px-2 py-1 rounded" type="button">Delete</button>
+              </div>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    </div>
+    <p class="text-xs text-slate-500 mt-2">Red: depleted inventory. Yellow: less than 10% remaining.</p>
+  </div>
+
+  <div class="bg-white rounded-lg shadow p-6">
+    <div class="flex items-center justify-between">
+      <h2 class="text-lg font-semibold">History and Compliance</h2>
+      <div class="flex gap-2">
+        <a href="/history/view" class="text-sm bg-slate-700 text-white px-3 py-2 rounded">Open Full History</a>
+        <a href="/report/cbp-export" class="text-sm bg-blue-700 text-white px-3 py-2 rounded">Generate Zone-to-Zone Report</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="inboundEditModal" class="hidden fixed inset-0 bg-slate-900/50 z-40">
+  <div class="min-h-full flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+      <h3 class="text-lg font-semibold mb-4">Edit Inbound Record</h3>
+      <form id="inboundEditForm" class="space-y-3">
+        <input id="inboundEditId" type="hidden" />
+        <div>
+          <label class="block text-sm mb-1">SKU</label>
+          <input id="inboundEditSku" type="text" class="w-full border rounded px-3 py-2 text-sm" required />
+        </div>
+        <div>
+          <label class="block text-sm mb-1">HTS Code</label>
+          <input id="inboundEditHtsCode" type="text" class="w-full border rounded px-3 py-2 text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm mb-1">Unit Value</label>
+          <input id="inboundEditUnitValue" type="number" min="0" step="0.0001" class="w-full border rounded px-3 py-2 text-sm" required />
+        </div>
+        <div>
+          <label class="block text-sm mb-1">Admission Number</label>
+          <input id="inboundEditAdmissionNo" type="text" class="w-full border rounded px-3 py-2 text-sm" />
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button id="inboundEditCancel" type="button" class="px-3 py-2 rounded border text-sm">Cancel</button>
+          <button type="submit" class="px-3 py-2 rounded bg-sky-700 text-white text-sm">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const searchInput = document.getElementById('inventorySearch');
+    const tbody = document.getElementById('inventoryTableBody');
+
+    const modal = document.getElementById('inboundEditModal');
+    const form = document.getElementById('inboundEditForm');
+    const editId = document.getElementById('inboundEditId');
+    const editSku = document.getElementById('inboundEditSku');
+    const editHtsCode = document.getElementById('inboundEditHtsCode');
+    const editUnitValue = document.getElementById('inboundEditUnitValue');
+    const editAdmissionNo = document.getElementById('inboundEditAdmissionNo');
+    const cancelBtn = document.getElementById('inboundEditCancel');
+
+    if (!searchInput || !tbody) return;
+
+    searchInput.addEventListener('input', function () {
+      const q = this.value.trim().toLowerCase();
+      const rows = tbody.querySelectorAll('tr');
+      rows.forEach((row) => {
+        const cells = row.querySelectorAll('td');
+        const admission = (cells[0]?.textContent || '').toLowerCase();
+        const sku = (cells[1]?.textContent || '').toLowerCase();
+        row.style.display = (!q || admission.includes(q) || sku.includes(q)) ? '' : 'none';
+      });
+    });
+
+    function closeModal() {
+      modal.classList.add('hidden');
+      form.reset();
+    }
+
+    cancelBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    tbody.addEventListener('click', async (e) => {
+      const row = e.target.closest('tr[data-inbound-id]');
+      if (!row) return;
+      const inboundId = row.getAttribute('data-inbound-id');
+
+      if (e.target.classList.contains('inbound-edit')) {
+        editId.value = inboundId;
+        editSku.value = row.getAttribute('data-sku') || '';
+        editHtsCode.value = row.getAttribute('data-hts-code') || '';
+        editUnitValue.value = row.getAttribute('data-unit-value') || '0';
+        editAdmissionNo.value = row.getAttribute('data-admission-no') || '';
+        modal.classList.remove('hidden');
+      }
+
+      if (e.target.classList.contains('inbound-delete')) {
+        if (!confirm('Delete this inbound record?')) return;
+
+        let resp = await fetch(`/api/inbound/${inboundId}`, { method: 'DELETE' });
+        let payload = await resp.json().catch(() => ({}));
+
+        if (resp.status === 409 && payload.warning) {
+          const force = confirm(`${payload.message}\n\nContinue and force delete?`);
+          if (!force) return;
+          resp = await fetch(`/api/inbound/${inboundId}?force=1`, { method: 'DELETE' });
+          payload = await resp.json().catch(() => ({}));
+        }
+
+        if (!resp.ok) {
+          toast(payload.error || 'Failed to delete inbound record', 'error');
+          return;
+        }
+
+        row.remove();
+        toast('Inbound record deleted', 'success');
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = editId.value;
+
+      const resp = await fetch(`/api/inbound/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sku: editSku.value,
+          hts_code: editHtsCode.value,
+          unit_value: editUnitValue.value,
+          admission_no: editAdmissionNo.value
+        })
+      });
+
+      const payload = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        toast(payload.error || 'Failed to update inbound record', 'error');
+        return;
+      }
+
+      const row = tbody.querySelector(`tr[data-inbound-id="${id}"]`);
+      if (row) {
+        row.setAttribute('data-sku', payload.record.sku || '');
+        row.setAttribute('data-hts-code', payload.record.hts_code || '');
+        row.setAttribute('data-unit-value', payload.record.unit_value || 0);
+        row.setAttribute('data-admission-no', payload.record.admission_no || '');
+        row.querySelector('.sku').textContent = payload.record.sku || '';
+        row.querySelector('.hts-code').textContent = payload.record.hts_code || '';
+        row.querySelector('.unit-value').textContent = payload.record.unit_value || 0;
+        row.querySelector('.admission-no').textContent = payload.record.admission_no || '';
+      }
+
+      closeModal();
+      toast('Inbound record updated', 'success');
+    });
+  })();
+</script>

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>FTZ Zone Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Custom corporate palette */
+      :root {
+        --brand-500: #0f172a; /* slate-900 */
+        --accent-500: #0ea5e9; /* sky-500 */
+        --muted: #64748b; /* slate-500 */
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-900 min-h-screen">
+    <nav class="bg-white shadow">
+      <div class="max-w-7xl mx-auto px-4">
+        <div class="flex justify-between h-16 items-center">
+          <div class="flex items-center space-x-4">
+            <div class="text-2xl font-semibold text-slate-800">FTZ Zone Manager</div>
+            <div class="hidden md:block">
+              <a href="/" class="ml-6 text-slate-600 hover:text-slate-900">Upload Data</a>
+              <a href="/inventory/view" class="ml-6 text-slate-600 hover:text-slate-900">Inventory View</a>
+              <a href="/history/view" class="ml-6 text-slate-600 hover:text-slate-900">History</a>
+            </div>
+          </div>
+          <div>
+            <span class="text-sm text-muted">Corporate</span>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-6">
+      <div id="toast" class="fixed top-6 right-6"></div>
+      <%- body %>
+    </main>
+
+    <script>
+      function toast(message, type = 'success') {
+        const el = document.createElement('div');
+        el.className = 'mb-4 px-4 py-2 rounded shadow-lg text-sm ' + (type === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white');
+        el.innerText = message;
+        document.getElementById('toast').appendChild(el);
+        setTimeout(() => el.remove(), 4000);
+      }
+      // show toast if query params
+      const params = new URLSearchParams(location.search);
+      if (params.get('status') === 'ok' && params.get('msg')) toast(params.get('msg'), 'success');
+      if (params.get('status') === 'err' && params.get('msg')) toast(params.get('msg'), 'error');
+      // show server-side messages
+      <% if (typeof message !== 'undefined' && message) { %>
+        toast(<%= JSON.stringify(message) %>, <%= JSON.stringify(messageType || 'error') %>);
+      <% } %>
+    </script>
+  </body>
+  </html>

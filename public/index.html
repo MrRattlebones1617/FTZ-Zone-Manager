@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>FTZ Zone Manager - Upload</title>
+  </head>
+  <body>
+    <h1>FTZ Zone Manager</h1>
+
+    <section>
+      <h2>Upload Inbound Inventory (Excel)</h2>
+      <form id="inboundForm" action="/upload/inbound" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".xlsx,.xls" required />
+        <button type="submit">Upload Inbound</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Upload Outbound Orders (Excel)</h2>
+      <form id="outboundForm" action="/upload/outbound" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".xlsx,.xls" required />
+        <button type="submit">Upload Outbound</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Reports</h2>
+      <a href="/report/export">Download Zone to Zone Report (Excel)</a>
+    </section>
+  </body>
+  </html>

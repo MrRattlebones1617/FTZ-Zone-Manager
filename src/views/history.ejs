@@ -1,0 +1,256 @@
+<div class="space-y-6">
+  <div class="bg-white rounded-lg shadow p-6">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-3">
+      <h2 class="text-lg font-semibold">Outbound History</h2>
+      <div class="flex flex-wrap gap-2 w-full md:w-auto">
+        <button id="generateSelectedReports" class="text-sm bg-emerald-700 text-white px-4 py-2 rounded whitespace-nowrap">Generate Selected Reports</button>
+        <input id="outboundSearch" type="text" placeholder="Search by SKU or DO#" class="w-full md:w-80 border rounded px-3 py-2 text-sm" />
+        <a href="/report/cbp-export" class="text-sm bg-blue-700 text-white px-4 py-2 rounded whitespace-nowrap">Generate Full ZTZ Report</a>
+      </div>
+    </div>
+    <div class="max-h-[24rem] overflow-auto border rounded">
+      <table id="outboundTable" class="w-full text-sm table-auto">
+        <thead class="text-left text-slate-700 bg-slate-100 sticky top-0 z-10">
+          <tr>
+            <th class="px-2 py-1"><input id="outboundSelectAll" type="checkbox" /></th>
+            <th class="px-2 py-1">Customer</th>
+            <th class="px-2 py-1">DO#</th>
+            <th class="px-2 py-1">PO#</th>
+            <th class="px-2 py-1">SKU</th>
+            <th class="px-2 py-1">Description</th>
+            <th class="px-2 py-1">Issue Date</th>
+            <th class="px-2 py-1">Container</th>
+            <th class="px-2 py-1">Qty Shipped</th>
+            <th class="px-2 py-1">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="outboundTableBody">
+          <% outboundHistory.forEach(o => { %>
+            <tr class="border-t" data-outbound-id="<%= o.id %>" data-do-no="<%= o.do_no || '' %>" data-po-no="<%= o.po_no || '' %>" data-qty-shipped="<%= o.qty_shipped || 0 %>">
+              <td class="px-2 py-1"><input class="outbound-select-row" type="checkbox" value="<%= o.id %>" /></td>
+              <td class="px-2 py-1"><%= o.customer %></td>
+              <td class="px-2 py-1 do-no"><%= o.do_no %></td>
+              <td class="px-2 py-1 po-no"><%= o.po_no %></td>
+              <td class="px-2 py-1 sku"><%= o.sku %></td>
+              <td class="px-2 py-1"><%= o.description %></td>
+              <td class="px-2 py-1"><%= o.issue_date ? new Date(o.issue_date).toISOString().slice(0,10) : '' %></td>
+              <td class="px-2 py-1"><%= o.container_no %></td>
+              <td class="px-2 py-1 qty-shipped"><%= o.qty_shipped %></td>
+              <td class="px-2 py-1">
+                <div class="flex gap-2">
+                  <button class="outbound-edit text-xs bg-sky-600 text-white px-2 py-1 rounded" type="button">Edit</button>
+                  <button class="outbound-delete text-xs bg-red-600 text-white px-2 py-1 rounded" type="button">Delete</button>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow p-6">
+    <h2 class="text-lg font-semibold mb-3">Inbound History</h2>
+    <div class="max-h-[24rem] overflow-auto border rounded">
+      <table class="w-full text-sm table-auto">
+        <thead class="text-left text-slate-700 bg-slate-100 sticky top-0 z-10">
+          <tr>
+            <th class="px-2 py-1">Admission #</th>
+            <th class="px-2 py-1">SKU</th>
+            <th class="px-2 py-1">Container</th>
+            <th class="px-2 py-1">Qty Pieces (Original)</th>
+            <th class="px-2 py-1">Qty Remaining</th>
+            <th class="px-2 py-1">Entry Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% inboundHistory.forEach(i => { %>
+            <tr class="border-t">
+              <td class="px-2 py-1"><%= i.admission_no %></td>
+              <td class="px-2 py-1"><%= i.sku %></td>
+              <td class="px-2 py-1"><%= i.container_no %></td>
+              <td class="px-2 py-1"><%= i.qty_pieces %></td>
+              <td class="px-2 py-1"><%= i.qty_remaining %></td>
+              <td class="px-2 py-1"><%= i.entry_date ? new Date(i.entry_date).toISOString().slice(0,10) : '' %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="outboundEditModal" class="hidden fixed inset-0 bg-slate-900/50 z-40">
+  <div class="min-h-full flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+      <h3 class="text-lg font-semibold mb-4">Edit Outbound Record</h3>
+      <form id="outboundEditForm" class="space-y-3">
+        <input id="outboundEditId" type="hidden" />
+        <div>
+          <label class="block text-sm mb-1">DO#</label>
+          <input id="outboundEditDoNo" type="text" class="w-full border rounded px-3 py-2 text-sm" required />
+        </div>
+        <div>
+          <label class="block text-sm mb-1">PO#</label>
+          <input id="outboundEditPoNo" type="text" class="w-full border rounded px-3 py-2 text-sm" required />
+        </div>
+        <div>
+          <label class="block text-sm mb-1">Quantity</label>
+          <input id="outboundEditQty" type="number" min="0.0001" step="0.0001" class="w-full border rounded px-3 py-2 text-sm" required />
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button id="outboundEditCancel" type="button" class="px-3 py-2 rounded border text-sm">Cancel</button>
+          <button type="submit" class="px-3 py-2 rounded bg-sky-700 text-white text-sm">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const input = document.getElementById('outboundSearch');
+    const tbody = document.getElementById('outboundTableBody');
+    const selectAll = document.getElementById('outboundSelectAll');
+    const generateBtn = document.getElementById('generateSelectedReports');
+
+    const modal = document.getElementById('outboundEditModal');
+    const form = document.getElementById('outboundEditForm');
+    const editId = document.getElementById('outboundEditId');
+    const editDoNo = document.getElementById('outboundEditDoNo');
+    const editPoNo = document.getElementById('outboundEditPoNo');
+    const editQty = document.getElementById('outboundEditQty');
+    const cancelBtn = document.getElementById('outboundEditCancel');
+
+    if (!input || !tbody) return;
+
+    input.addEventListener('input', function () {
+      const q = this.value.trim().toLowerCase();
+      const rows = tbody.querySelectorAll('tr');
+      rows.forEach((row) => {
+        const cells = row.querySelectorAll('td');
+        const doNo = (cells[2]?.textContent || '').toLowerCase();
+        const sku = (cells[4]?.textContent || '').toLowerCase();
+        row.style.display = (!q || doNo.includes(q) || sku.includes(q)) ? '' : 'none';
+      });
+    });
+
+    if (selectAll) {
+      selectAll.addEventListener('change', function () {
+        tbody.querySelectorAll('.outbound-select-row').forEach((cb) => {
+          cb.checked = this.checked;
+        });
+      });
+    }
+
+    function closeModal() {
+      modal.classList.add('hidden');
+      form.reset();
+    }
+
+    cancelBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    tbody.addEventListener('click', async (e) => {
+      const row = e.target.closest('tr[data-outbound-id]');
+      if (!row) return;
+      const outboundId = row.getAttribute('data-outbound-id');
+
+      if (e.target.classList.contains('outbound-edit')) {
+        editId.value = outboundId;
+        editDoNo.value = row.getAttribute('data-do-no') || '';
+        editPoNo.value = row.getAttribute('data-po-no') || '';
+        editQty.value = row.getAttribute('data-qty-shipped') || '0';
+        modal.classList.remove('hidden');
+      }
+
+      if (e.target.classList.contains('outbound-delete')) {
+        if (!confirm('Delete this outbound record? This will also remove linked match records.')) return;
+
+        const resp = await fetch(`/api/outbound/${outboundId}`, { method: 'DELETE' });
+        const payload = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+          toast(payload.error || 'Failed to delete outbound record', 'error');
+          return;
+        }
+
+        row.remove();
+        toast('Outbound record deleted', 'success');
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = editId.value;
+
+      const resp = await fetch(`/api/outbound/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          do_no: editDoNo.value,
+          po_no: editPoNo.value,
+          qty_shipped: editQty.value
+        })
+      });
+
+      const payload = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        toast(payload.error || 'Failed to update outbound record', 'error');
+        return;
+      }
+
+      const row = tbody.querySelector(`tr[data-outbound-id="${id}"]`);
+      if (row) {
+        row.setAttribute('data-do-no', payload.record.do_no || '');
+        row.setAttribute('data-po-no', payload.record.po_no || '');
+        row.setAttribute('data-qty-shipped', payload.record.qty_shipped || 0);
+        row.querySelector('.do-no').textContent = payload.record.do_no || '';
+        row.querySelector('.po-no').textContent = payload.record.po_no || '';
+        row.querySelector('.qty-shipped').textContent = payload.record.qty_shipped || 0;
+      }
+
+      closeModal();
+      toast('Outbound record updated', 'success');
+    });
+
+    if (generateBtn) {
+      generateBtn.addEventListener('click', async () => {
+        const selected = [...tbody.querySelectorAll('.outbound-select-row:checked')].map((cb) => Number(cb.value)).filter(Boolean);
+        if (!selected.length) {
+          toast('Select at least one outbound row', 'error');
+          return;
+        }
+
+        const resp = await fetch('/report/ztz-export', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ outbound_ids: selected })
+        });
+
+        if (!resp.ok) {
+          const payload = await resp.json().catch(() => ({}));
+          toast(payload.error || 'Failed to generate selected reports', 'error');
+          return;
+        }
+
+        const blob = await resp.blob();
+        const contentDisposition = resp.headers.get('Content-Disposition') || '';
+        const fileNameMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
+        const fileName = fileNameMatch ? fileNameMatch[1] : 'zone_to_zone_selected.xlsx';
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+
+        toast('Selected report generated', 'success');
+      });
+    }
+  })();
+</script>

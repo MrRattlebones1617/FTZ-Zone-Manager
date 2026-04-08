@@ -1,0 +1,29 @@
+<div class="bg-white rounded-lg shadow p-6">
+  <h1 class="text-xl font-semibold mb-2">Upload Excel Data</h1>
+  <p class="text-sm text-slate-600 mb-6">Use standardized templates to keep reconciliation and CBP reporting accurate.</p>
+
+  <div class="grid md:grid-cols-2 gap-6">
+    <div>
+      <h2 class="font-medium mb-2">Inbound Inventory</h2>
+      <form action="/upload/inbound" method="post" enctype="multipart/form-data" class="flex items-center space-x-3">
+        <input type="file" name="file" accept=".xlsx,.xls" required class="border rounded px-2 py-1" />
+        <button class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-1 rounded">Upload</button>
+      </form>
+      <a href="/templates/inbound" class="text-sm text-slate-700 mt-2 inline-block underline">Download inbound template</a>
+    </div>
+
+    <div>
+      <h2 class="font-medium mb-2">Outbound Orders</h2>
+      <form action="/upload/outbound" method="post" enctype="multipart/form-data" class="flex items-center space-x-3">
+        <input type="file" name="file" accept=".xlsx,.xls" required class="border rounded px-2 py-1" />
+        <button class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-1 rounded">Upload</button>
+      </form>
+      <a href="/templates/outbound" class="text-sm text-slate-700 mt-2 inline-block underline">Download outbound template</a>
+    </div>
+  </div>
+
+  <div class="mt-6 flex gap-3">
+    <a href="/report/ztz-export" class="text-sm text-white bg-slate-700 px-3 py-2 rounded">Download Zone to Zone Report</a>
+    <a href="/report/cbp-export" class="text-sm text-white bg-blue-700 px-3 py-2 rounded">Generate CBP Zone-to-Zone Report</a>
+  </div>
+</div>
