@@ -71,3 +71,14 @@ git push -u origin master
 Security note: avoid pasting raw PATs into shells. Use `git credential-manager` or configure SSH keys.
 
 If you want, provide the GitHub repo URL and whether you prefer HTTPS+PAT or SSH and I will add the remote and push for you (you will need to supply a PAT or have SSH keys already configured on the Windows PC).
+
+# FTZ-Zone-Manager
+Tool for handling report generation for FTZ Zone to Zone / Tally Out Control
+
+---
+
+Project: FTZ Zone Manager
+
+This repository contains the FTZ Zone Manager web application used to import inbound/outbound Excel files, perform FIFO matching, and generate Zone-to-Zone reports.
+
+Quick start and usage instructions are included above.
